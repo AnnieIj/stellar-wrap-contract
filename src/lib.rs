@@ -44,6 +44,7 @@ mod errors;
 mod error_messages;
 mod events;
 mod governance;
+pub mod guard;
 mod merkle;
 mod mint;
 mod optout;
@@ -62,6 +63,7 @@ mod ttl;
 mod wrap_record_helpers;
 
 pub use errors::ContractError;
+pub use guard::{ensure, require_some};
 pub use mint::{validate_period, CURRENT_PAYLOAD_VERSION, MAX_PERIOD_YEAR, MIN_PERIOD_YEAR};
 pub use oracle::DataHashOracle;
 pub use storage_types::{
