@@ -3,7 +3,14 @@ import { SorobanFetcher } from './fetcher';
 import { IndexerDB } from './db';
 import { decodeDataKey, decodeStorageValue } from './decoder';
 import { applyStorageEntryToState, createEmptyState } from './processor';
-import type { DerivedState, StorageEntry, WrapRecord, WrapRow, WrapState } from './types';
+import type {
+  DerivedState,
+  RetentionGap,
+  StorageEntry,
+  WrapRecord,
+  WrapRow,
+  WrapState,
+} from './types';
 import { DataKeyVariant } from './types';
 
 function compareFields(
@@ -130,7 +137,8 @@ export type AlertCondition =
   | 'governance_proposal_executed'
   | 'timelock_action_scheduled'
   | 'bridge_chain_disabled'
-  | 'reconciliation_drift';
+  | 'reconciliation_drift'
+  | 'retention_gap';
 
 /**
  * A single alert emitted from reconciler output. `expected` distinguishes a
@@ -201,6 +209,8 @@ export interface IndexerHealth {
   last_reconciliation: ReconciliationRun | null;
   /** True when the last reconciliation reported genuine divergence. */
   last_reconciliation_ok: boolean;
+  /** Ledger ranges RPC pruned before the indexer read them; never backfillable. */
+  open_gaps: RetentionGap[];
   timestamp: string;
 }
 
@@ -241,6 +251,7 @@ export function buildIndexerHealth(
   chainHeadLedger: number,
   lagThreshold: number,
   lastReconciliation: ReconciliationRun | null,
+  openGaps: RetentionGap[] = [],
   nowMs: number = Date.now(),
 ): IndexerHealth {
   const lag = Math.max(0, chainHeadLedger - metrics.last_processed_ledger);
@@ -257,6 +268,7 @@ export function buildIndexerHealth(
     retry_count: metrics.retry_count,
     last_reconciliation: lastReconciliation,
     last_reconciliation_ok: lastReconciliation ? !lastReconciliation.genuine_divergence : true,
+    open_gaps: openGaps,
     timestamp: new Date(nowMs).toISOString(),
   };
 }
@@ -670,6 +682,24 @@ export function alertsFromReconciliationRun(run: ReconciliationRun): ContractAle
       timestamp: run.timestamp,
     },
   ];
+}
+
+/**
+ * Derive one alert per retention gap. A gap is permanent data loss for its
+ * range, so it is always escalated; it is never treated as expected lag.
+ */
+export function alertsFromRetentionGaps(gaps: RetentionGap[]): ContractAlert[] {
+  return gaps.map((gap) => ({
+    condition: 'retention_gap',
+    contract_id: gap.contract_id,
+    ledger_seq: gap.to_ledger,
+    expected: false,
+    message:
+      `Retention gap on ${gap.contract_id}: ledgers ${gap.from_ledger}-${gap.to_ledger} ` +
+      `were pruned by Soroban-RPC and cannot be backfilled`,
+    details: { from_ledger: gap.from_ledger, to_ledger: gap.to_ledger },
+    timestamp: gap.detected_at,
+  }));
 }
 
 /**

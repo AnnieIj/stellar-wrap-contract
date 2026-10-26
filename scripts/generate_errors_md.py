@@ -4,9 +4,10 @@
 `src/error_messages.json` is canonical: every `ContractError` variant maps to
 one entry with `variant`, `code`, `actionable`, and `message`. This script
 
-  * regenerates the table in `ERRORS.md` from the JSON (default mode), and
+  * regenerates the table in `docs/errors.md` from the JSON (default mode), and
   * in `--check` mode verifies that `src/errors.rs` and the generated section
-    of `ERRORS.md` both agree with the JSON, exiting non-zero when they do not.
+    of `docs/errors.md` both agree with the JSON, exiting non-zero when they do
+    not.
 
 CI runs `python3 scripts/generate_errors_md.py --check` so the copies cannot
 drift apart again. The Rust-side mirror of this check lives in
@@ -24,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 JSON_PATH = ROOT / "src" / "error_messages.json"
 ERRORS_RS_PATH = ROOT / "src" / "errors.rs"
-ERRORS_MD_PATH = ROOT / "ERRORS.md"
+ERRORS_MD_PATH = ROOT / "docs" / "errors.md"
 
 BEGIN_MARKER = "<!-- BEGIN GENERATED TABLE: do not edit by hand; run scripts/generate_errors_md.py -->"
 END_MARKER = "<!-- END GENERATED TABLE -->"
@@ -147,7 +148,7 @@ def main() -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="verify errors.rs and ERRORS.md match error_messages.json",
+        help="verify errors.rs and docs/errors.md match error_messages.json",
     )
     args = parser.parse_args()
 

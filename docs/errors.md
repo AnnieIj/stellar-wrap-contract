@@ -80,8 +80,9 @@ The table below is generated — run `python3 scripts/generate_errors_md.py` aft
 | 60 | `StaleProposal` | yes | The admin changed after this proposal was created. Create a new proposal under the current admin. |
 | 61 | `InvalidRelayerSet` | no | The relayer set is not valid. It must meet the threshold and contain no duplicates. |
 | 62 | `SignatureExpired` | yes | The mint signature has expired. Request a new signature with a later valid_until, then try again. |
+| 63 | `InvalidDataHash` | yes | The data hash is all zeros. Recompute it from the wrap data and resubmit. |
 
-Generated from `src/error_messages.json` (62 variants). Do not edit this table by hand: run `python3 scripts/generate_errors_md.py` and commit the result.
+Generated from `src/error_messages.json` (63 variants). Do not edit this table by hand: run `python3 scripts/generate_errors_md.py` and commit the result.
 
 <!-- END GENERATED TABLE -->
 ---

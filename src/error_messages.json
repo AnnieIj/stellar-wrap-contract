@@ -370,5 +370,11 @@
     "code": 62,
     "actionable": true,
     "message": "The mint signature has expired. Request a new signature with a later valid_until, then try again."
+  },
+  {
+    "variant": "InvalidDataHash",
+    "code": 63,
+    "actionable": true,
+    "message": "The data hash is all zeros. Recompute it from the wrap data and resubmit."
   }
 ]
